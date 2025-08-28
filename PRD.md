@@ -1,126 +1,238 @@
-# Sri Sharada Press Website – Product Requirements Document (PRD)
+## Product Requirements Document (PRD)
 
-## 1. Overview
-A marketing and booking website for Sri Sharada Press. Visitors can learn about services, view portfolio/testimonials, and send booking or contact requests. The site is a static React + Vite app deployed on Vercel. All form submissions are handled client-side via Web3Forms; no serverless functions are used.
+Sri Sharada Press Website (Printing_Press)
 
-## 2. Goals
-- Enable customers to quickly submit Booking and Contact requests.
-- Showcase services, portfolio, testimonials, and business info.
-- Provide reliable email delivery to `sspress.1912@gmail.com` via Web3Forms.
-- Ensure fast, accessible, mobile-first experience.
-- Deploy with zero backend maintenance (static site on Vercel).
 
-## 3. Non‑Goals
-- User authentication, dashboards, or CMS.
-- On‑site payments or complex quoting engines.
-- File storage beyond email attachments.
+### 1. Summary
+Sri Sharada Press is a modern marketing and lead‑generation website for a century‑old printing press. It showcases services, heritage, testimonials, portfolio, and provides booking and contact forms that send email notifications via a serverless API. The site emphasizes speed, accessibility, and reliability.
 
-## 4. Users & Personas
-- Prospective customers seeking printing services (mobile-first; quick contact).
-- Returning customers needing a fast way to re-order or enquire.
-- Business owner/operators checking inbound requests.
 
-## 5. Success Metrics
-- Form conversion rate (submissions / visits).
-- Email delivery success (Web3Forms success responses).
-- Site Core Web Vitals (LCP, CLS, INP) in green.
+### 2. Goals and Non‑Goals
+- Goals
+  - Present a trustworthy, modern brand experience rooted in heritage.
+  - Enable prospects to request quotes or contact the business quickly (phone, email, WhatsApp, forms).
+  - Route form submissions to the press’s inbox with optional attachments.
+  - Be fast, accessible, and easy to maintain/deploy.
+- Non‑Goals
+  - No user accounts or dashboards.
+  - No online payments or order tracking.
+  - No headless CMS integration (static content maintained in code).
 
-## 6. Scope and Features
-### 6.1 Pages
-- Home (`/`): Hero, service highlights, testimonials, CTA to Booking.
-- Services (`/services`): Service list with descriptions.
-- Booking (`/booking`): Form with optional file upload; toasts for feedback.
-- Portfolio (`/portfolio`): Showcase work.
-- Testimonials (`/testimonials`): Social proof.
-- About (`/about`): Company information.
-- Contact (`/contact`): Rich contact form with optional deadline, WhatsApp follow-up, file attachment, map and quick action links.
-- 404 (`/404` or fallback): Not found page.
 
-### 6.2 Forms
-- Common requirements
-  - Validation (client-side) with helpful error messages.
-  - Single submission per click; visible progress/disabled state.
-  - Success: toast notification and form reset.
-  - Failure: toast shows provider error message.
-  - Spam mitigation: hidden honeypot field (optional for contact), domain allow-list in Web3Forms.
+### 3. Stakeholders
+- Business owner and staff (primary)
+- Prospective customers (B2B, B2C)
+- Maintainers/Developers
 
-- Booking form (`src/components/BookingForm.tsx`)
-  - Fields: name, email, phone, service, dimensions (optional), quantity, preferred date (optional), additional info (optional), attachment (optional: PDF/PNG/JPG/SVG/TIFF; size limit enforced by UI), hidden `access_key`.
-  - Submission: `multipart/form-data` to `https://api.web3forms.com/submit`.
-  - Metadata: `from_name` = "Sri Sharada Press Website"; `subject` = `New Booking: <Service> — <Name>`.
 
-- Contact form (`src/pages/Contact.tsx`)
-  - Fields: name, email, phone (optional), subject, message, deadline (optional), allow WhatsApp (boolean), attachment (optional), honeypot `website`.
-  - Hook: `useWeb3Submit` builds FormData and posts to Web3Forms.
-  - Metadata: `from_name` = "Sri Sharada Press Website", dynamic subject.
+### 4. Target Users and Personas
+- Local business owner needing signage, visiting cards, or promotional material.
+- Family planning wedding/invitation cards.
+- Event organizer needing banners, standees, and collateral.
 
-### 6.3 Email Link Behavior
-- Component `src/components/EmailLink.tsx`:
-  - Mobile: opens system default mail app via `mailto:`.
-  - Desktop: prompt to open Gmail, Outlook Web, or default mail app.
-  - Fallback to copying address if navigation fails.
 
-### 6.4 Quick Actions
-- Call button (`tel:`), WhatsApp link, map link to Google Maps.
+### 5. Success Metrics
+- Form conversion rate (booking/contact submissions per sessions).
+- Time to first interaction (call, email, WhatsApp, submit).
+- Email delivery success rate from serverless function.
+- Core Web Vitals (LCP, CLS) within good thresholds.
 
-## 7. Architecture & Tech Stack
-- Frontend: React 18, Vite 5, TypeScript, React Router, TanStack Query.
-- UI: Tailwind CSS, shadcn/ui components, Lucide icons, Sonner toasts.
-- Forms/Validation: React Hook Form + Zod.
-- Email delivery: Web3Forms (no backend).
-- Analytics: `@vercel/analytics` (optional).
 
-## 8. Configuration & Environments
-- Environment variables
-  - `VITE_WEB3FORMS_KEY` (required): Web3Forms Access Key.
-- Web3Forms Dashboard:
-  - Configure Allowed Domains for production domain(s).
-  - Set destination inbox (`sspress.1912@gmail.com`).
-- Vercel Deployment (static):
-  - Framework: Vite (auto-detect).
-  - Build command: `vite build` (or `npm run build`).
-  - Output directory: `dist`.
-  - No serverless functions; no `vercel.json` required.
+### 6. Information Architecture / Sitemap
+- Home `/`
+- Services `/services`
+- Booking `/booking` (primary conversion)
+- Contact `/contact`
+- About `/about`
+- Portfolio `/portfolio`
+- Testimonials `/testimonials`
+- Legacy `/legacy`
+- 404 `*`
 
-## 9. UX Requirements
-- Mobile-first responsive layout.
-- Clear CTAs on Home/Services to Booking and Contact.
-- Accessible components: labels, focus states, ARIA attributes where appropriate.
-- Feedback: loading states and toast notifications for all async actions.
 
-## 10. Performance & Quality
-- Optimize images (serve from `public/`, use appropriate sizes/formats).
-- Code splitting via Vite defaults; avoid unnecessary large libraries.
-- Lighthouse accessibility score ≥ 90; performance ≥ 90 on typical 4G.
+### 7. Detailed Feature Requirements
 
-## 11. File Upload Constraints
-- Client-side limit (default 10 MB) in `FileUpload`.
-- Accepted: `.pdf, .png, .jpg, .jpeg, .svg, .tiff` (configurable).
-- Files transmitted only via Web3Forms email; no storage.
+7.1 Navigation & Layout
+- Sticky `Navbar` with brand, primary links, and “Book Now” CTA.
+- Mobile menu via drawer; active route states; visible focus states.
+- `Footer` with quick links, services list shortcuts, address, phone, email, and “back to top”.
 
-## 12. Error Handling
-- Form errors surfaced via inline messages and toast.
-- Network/API errors show provider message from Web3Forms when available.
-- Graceful fallbacks for email link navigation (copy to clipboard).
+7.2 Home
+- Hero with legacy positioning, clear CTAs: Explore Legacy and Get a Quote.
+- About teaser, icon‑centric services section, testimonials preview, “Why choose us”, final CTA.
 
-## 13. Analytics & Logging
-- Page view analytics via `@vercel/analytics`.
-- No PII stored; only form submissions sent to email via Web3Forms.
+7.3 Services
+- Icon‑centric grid describing all services with features.
+- “Book this service” CTA that deep‑links to `/booking?service=<slug>`.
 
-## 14. Security & Privacy
-- Public access key used for Web3Forms; server-side email handling by provider.
-- No sensitive secrets in client bundle beyond Web3Forms public key.
-- Follow privacy best practices; no tracking beyond analytics noted above.
+7.4 Booking
+- Booking form with fields:
+  - Full name (required)
+  - Email (required, type email)
+  - Phone (required, structured via custom `PhoneInput` with country code)
+  - Service (required; preselected when `?service=` is present)
+  - Dimensions (optional)
+  - Quantity (required, min 1)
+  - Preferred date (optional date picker)
+  - Attachments (optional; accepts .pdf, .png, .jpg, .jpeg, .svg, .tiff)
+  - Additional information (optional)
+- Anti‑spam honeypot: hidden `botcheck` field must remain empty.
+- Attachments: client converts files to base64 and enforces ~8MB total across attachments.
+- Submit sends JSON to `/api/send` with `{ source: "booking", ... }` and shows success/error toasts.
+- Right column: quick contact actions and trust blocks.
 
-## 15. Acceptance Criteria
-- Vercel build succeeds; site served as static Vite app from `dist/`.
-- Booking and Contact forms POST to Web3Forms with `multipart/form-data`, include `access_key`, and return success with toasts; forms reset on success.
-- Emails are delivered to `sspress.1912@gmail.com` (as configured in Web3Forms dashboard), including attachments.
-- Email links open Gmail/Outlook selection on desktop and default mail app on mobile.
-- Single `<Toaster richColors closeButton />` mounted at app root.
+7.5 Contact
+- Contact form with fields:
+  - Full name (required)
+  - Email (required)
+  - Phone (required)
+  - Subject (General Inquiry | Quote Request | Support | Feedback)
+  - Deadline (optional date picker)
+  - Allow WhatsApp follow‑up (radio yes/no)
+  - Message (required)
+  - Attachments (optional; same types)
+- Anti‑spam honeypot and 8MB total attachment cap.
+- Submits to `/api/send` with `{ source: "contact", ... }`.
+- Quick actions: call, email, WhatsApp link prefilled using `VITE_WHATSAPP_NUMBER` fallback `919391011520`.
+- Business info card with address and hours, and an embedded Google Maps iframe + “Open in Google Maps” link.
 
-## 16. Open Questions / Future Enhancements
-- Add CMS for services/portfolio content management?
-- Add image optimization pipeline and CDN configuration.
-- Add reCAPTCHA or hCaptcha to further reduce spam (Web3Forms supports this).
-- Add Thank You pages with conversion tracking.
+7.6 Portfolio
+- Static, filterable showcase by category with cards and images.
+- CTA: Book and Contact buttons.
+
+7.7 Testimonials
+- Grid of testimonial cards with ratings, quotes, avatars.
+- CTA: Book and WhatsApp.
+
+7.8 About
+- Heritage, values, and team section with motion effects and CTA.
+
+7.9 Not Found
+- Friendly 404 page linked in router wildcard.
+
+
+### 8. Forms, Data Model, and API
+
+8.1 Client payload shape
+```
+source: "booking" | "contact"
+name: string
+email: string
+phone?: string
+subject?: string
+service?: string
+message: string
+attachments?: { filename: string; content: string; content_type?: string }[]
+```
+
+8.2 Client behavior
+- `filesToBase64(inputs)` reads selected files and builds attachment array including `size` (used only client‑side to enforce 8MB cap; stripped before send).
+- `sendToEdge(payload)` POSTs JSON to `/api/send`, throwing on non‑2xx responses.
+- Honeypot check blocks obvious bots.
+
+8.3 Serverless API: `/api/send`
+- Methods: OPTIONS 200, GET 200 (health), POST 200/4xx/5xx.
+- Validates `name`, `email`, `message` presence; responds 400 if missing.
+- Builds simple HTML summary (including `source`, `phone`, `service`, `subject`).
+- Calls Resend REST API to send an email:
+  - `from`: `RESEND_FROM` (required)
+  - `to`: array with `RESEND_TO` or default `sspress.1912@gmail.com`
+  - `reply_to`: sender’s email
+  - `subject`: `subject` if provided else derived
+  - `html`: generated body
+  - `attachments`: base64 attachments (no data: prefix)
+- Responds `{ ok: true, id }` on success or `{ error, details }` on failure.
+- CORS: `Access-Control-Allow-Origin: *` for GET/POST/OPTIONS.
+
+8.4 Test endpoint: `/api/test`
+- Returns `{ ok, method, timestamp, env }` to verify deployment configuration.
+
+
+### 9. Environment & Configuration
+- Deployment: Vercel (recommended) with serverless functions under `api/`.
+- Required env vars (server):
+  - `RESEND_API_KEY`
+  - `RESEND_FROM` (e.g., `Sri Sharada Press <notifications@yourdomain.com>`)
+  - Optional: `RESEND_TO` (default `sspress.1912@gmail.com`)
+- Client (Vite):
+  - `VITE_WHATSAPP_NUMBER` (digits only, 7–15; fallback `919391011520`)
+  - Optional Formspree/webhook: `VITE_FORMSPREE_ENDPOINT`, `VITE_FORMSPREE_CONTACT_ENDPOINT`, `VITE_EMAIL_WEBHOOK`, `VITE_CONTACT_EMAIL`
+
+
+### 10. Accessibility Requirements
+- Keyboard accessible nav, forms, dialogs, and focus outlines.
+- Color contrast for text and interactive elements meets WCAG AA.
+- Reduced‑motion respected for animations.
+- Semantic HTML for headings, labels, and buttons; icons have `aria-hidden` where decorative.
+
+
+### 11. Performance & SEO
+- Fast LCP via optimized images and static rendering.
+- Proper meta tags and descriptive copy on key pages.
+- Bundle splitting configured (vendor/ui chunks) to improve load.
+
+
+### 12. Analytics and Observability
+- `@vercel/analytics` enabled in `main.tsx`.
+- Manual event tracking not required at launch; can be added later for conversions.
+
+
+### 13. Security & Privacy
+- Honeypot spam protection on forms.
+- Permissive CORS limited to this use case; consider tightening if embedding elsewhere.
+- No PII persisted server‑side; emails are relayed via Resend only.
+
+
+### 14. Constraints & Assumptions
+- Attachments total size capped at ~8MB client‑side.
+- Sending domain is configured in Resend; `RESEND_FROM` is authorized.
+- Content and assets are static and maintained in the repo.
+
+
+### 15. Acceptance Criteria
+
+15.1 Routing
+- Visiting each route renders the expected page and landmarks; unknown routes show 404.
+
+15.2 Booking Form
+- Preselects service when `?service=<slug>` matches known services.
+- Validation errors show when required fields are empty; submit disabled during send.
+- On success, toast “booking request was sent”, form resets, date cleared.
+- Attachments: accepts allowed types; >8MB total shows error and blocks submit.
+
+15.3 Contact Form
+- Requires name, email, phone, and message.
+- Subject defaults to “General Inquiry”; allow WhatsApp radio toggles.
+- On success, toast “message was sent”, form resets, date cleared, counter reset.
+
+15.4 WhatsApp CTA
+- Clicking WhatsApp actions opens `wa.me/<number>` with encoded prefilled message.
+- If `VITE_WHATSAPP_NUMBER` invalid/missing, uses fallback `919391011520`.
+
+15.5 API
+- `GET /api/test` returns 200 JSON with env flags.
+- `POST /api/send` 400 for missing required fields; 200 with `{ ok: true }` on success; 5xx/502 on Resend errors.
+
+15.6 Accessibility
+- All interactive controls reachable by keyboard; visible focus ring.
+- Images have `alt` where informative.
+
+
+### 16. Out of Scope (v1)
+- Multi‑language content.
+- Pricing calculator/estimator.
+- Admin dashboard or CRM integration.
+
+
+### 17. Future Enhancements
+- Rate‑limit and captcha for forms.
+- Structured email templates with branding.
+- CMS for content updates.
+- Lead tagging/UTM capture and analytics events.
+
+
+### 18. Release Plan
+- v1.0: Current feature set deployed to Vercel; env configured; email delivery verified.
+- v1.1+: Incremental improvements (analytics, SEO, performance budgets, content updates).
+
+
