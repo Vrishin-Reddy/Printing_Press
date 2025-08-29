@@ -1,0 +1,24 @@
+/* sticky search blur (Safari needs -webkit) */
+.pp-dropdown .search-box{
+  position:sticky; top:0; background:inherit;
+  padding:.5rem .6rem!important;
+  border-bottom:1px solid var(--pp-border)!important; z-index:2;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* hover highlight with solid fallback before color-mix */
+.country:hover,.country.highlight{
+  background: #e6f6ff !important;
+  background: color-mix(in srgb, var(--pp-accent) 12%, transparent) !important;
+}
+
+/* Firefox scrollbar */
+.pp-dropdown{ scrollbar-width: thin; scrollbar-color: rgba(100,116,139,.35) transparent; }
+
+/* WebKit mask fallback (FF ignores -webkit-mask) */
+.pp-dropdown{
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+}
+

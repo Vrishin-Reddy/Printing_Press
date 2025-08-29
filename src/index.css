@@ -74,6 +74,11 @@
 		--border: 183 18% 22%;
 		--input: 183 18% 22%;
 		--ring: 183 22% 45%;
+
+		/* z-index scale for overlays above embeds */
+		--z-dropdown: 1000;
+		--z-toast: 1100;
+		--z-modal: 1200;
   }
 }
 
@@ -116,4 +121,8 @@
     0% { transform: translateY(0); }
     100% { transform: translateY(14px); }
   }
+
+  /* Ensure dropdowns/toasts are above embeds */
+  .spr-country-dropdown,.pp-dropdown{ z-index: var(--z-dropdown) !important; }
+  [data-sonner-toaster]{ z-index: var(--z-toast) !important; }
 }

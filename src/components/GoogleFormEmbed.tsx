@@ -4,8 +4,8 @@ import "./google-form-embed.css";
 type Props = {
   src: string;        // full Google Form URL (viewform or with embedded=true)
   title: string;
-  minHeight?: number; // desktop min height
-  minHeightMobile?: number;
+  minHeight?: number; // optional, no longer used for calc (kept for API compatibility)
+  minHeightMobile?: number; // optional, no longer used for calc
 };
 
 function toEmbedded(url: string) {
@@ -26,28 +26,12 @@ export default function GoogleFormEmbed({
 }: Props) {
   const embedSrc = toEmbedded(src);
   const [loaded, setLoaded] = React.useState(false);
-  const [height, setHeight] = React.useState(minHeight);
   const loads = React.useRef(0);
-
-  React.useEffect(() => {
-    const measure = () => {
-      const isMobile = matchMedia("(max-width: 640px)").matches;
-      const base = Math.max(
-        innerHeight * (isMobile ? 1.4 : 1.1),
-        isMobile ? minHeightMobile : minHeight
-      );
-      setHeight(Math.round(base));
-    };
-    measure();
-    const onResize = () => measure();
-    addEventListener("resize", onResize);
-    return () => removeEventListener("resize", onResize);
-  }, [minHeight, minHeightMobile]);
 
   return (
     <div className="gfe">
       {!loaded && (
-        <div className="gfe-skeleton" style={{ minHeight: height }}>
+        <div className="gfe-skeleton">
           <div className="gfe-bar" />
           <div className="gfe-bar" />
           <div className="gfe-bar short" />
@@ -57,7 +41,6 @@ export default function GoogleFormEmbed({
         title={title}
         src={embedSrc}
         className={`gfe-iframe${loaded ? " is-loaded" : ""}`}
-        style={{ minHeight: height }}
         loading="lazy"
         frameBorder={0}
         marginHeight={0}
