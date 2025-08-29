@@ -34,8 +34,7 @@ jobs:
           GITHUB_ACTIONS: true
           GITHUB_REPOSITORY: ${{ github.repository }}
           VITE_CONTACT_EMAIL: ${{ secrets.VITE_CONTACT_EMAIL }}
-          VITE_FORMSPREE_ENDPOINT: ${{ secrets.VITE_FORMSPREE_ENDPOINT }}
-          VITE_FORMSPREE_CONTACT_ENDPOINT: ${{ secrets.VITE_FORMSPREE_CONTACT_ENDPOINT }}
+
           VITE_EMAIL_WEBHOOK: ${{ secrets.VITE_EMAIL_WEBHOOK || '' }}
           VITE_WHATSAPP_NUMBER: ${{ secrets.VITE_WHATSAPP_NUMBER }}
         run: npm run build
