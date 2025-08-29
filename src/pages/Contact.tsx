@@ -2,87 +2,15 @@
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-import { Phone, Mail, MapPin, CalendarDays, Send, Paperclip } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { getWhatsAppLink } from '@/utils/whatsapp';
-import { toast } from 'sonner';
 import EmailLink from '@/components/EmailLink';
-import { filesToBase64, sendToEdge } from '@/lib/sendForm';
-import PhoneInput from '@/components/PhoneInput';
+import GoogleFormEmbed from '@/components/GoogleFormEmbed';
 
 const Contact = () => {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const [selectedDate, setSelectedDate] = React.useState<Date>();
-  const [messageLength, setMessageLength] = React.useState(0);
-  const [formValues, setFormValues] = React.useState({
-    name: '',
-    phone: '',
-    subject: 'General Inquiry'
-  });
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    const form = formRef.current!;
-    const fd = new FormData(form);
-
-    // Collect files (optional)
-    const fileInputs = Array.from(form.querySelectorAll<HTMLInputElement>('input[type="file"]'));
-    const attachments = await filesToBase64(fileInputs);
-    const total = attachments.reduce((s, a) => s + (a.size || 0), 0);
-    if (total > 8 * 1024 * 1024) {
-      toast.error("Attachments too large (limit 8MB total).");
-      return;
-    }
-
-    // Check honeypot
-    const botcheck = String(fd.get("botcheck") || "");
-    if (botcheck) {
-      toast.error("Spam detected. Please try again.");
-      return;
-    }
-
-    // Build JSON payload for Edge Function
-    const payload = {
-      source: "contact" as const,
-      name: String(fd.get("name") || ""),
-      email: String(fd.get("email") || ""),
-      phone: String(fd.get("phone") || ""),
-      subject: String(fd.get("subject") || "Contact Request"),
-      message: String(fd.get("message") || ""),
-      attachments: attachments.length ? attachments.map(({ size, ...rest }) => rest) : undefined,
-    };
-
-    if (!payload.name || !payload.email || !payload.phone || !payload.message) {
-      toast.error("Please fill name, email, phone, and message.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    const tid = toast.loading("Sending your message…");
-    try {
-      await sendToEdge(payload);
-      toast.dismiss(tid);
-      toast.success("Thanks! Your message was sent.");
-      form.reset();
-      setSelectedDate(undefined);
-      setMessageLength(0);
-      setFormValues({ name: '', phone: '', subject: 'General Inquiry' });
-    } catch (err: any) {
-      toast.dismiss(tid);
-      toast.error(err?.message || "Failed to send. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const formValues = React.useMemo(() => ({ name: '', phone: '', subject: 'General Inquiry' }), []);
 
   return (
     <div className="min-h-screen">
@@ -100,172 +28,25 @@ const Contact = () => {
       <section className="section-container">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] gap-8">
-            {/* LEFT: Form Card */}
-            <form ref={formRef} onSubmit={onSubmit} className="contents" noValidate>
+            {/* LEFT: Embedded Google Form Card */}
+            <div className="contents">
               <Card className="rounded-2xl border border-muted/20 bg-background/60 backdrop-blur shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Send className="h-5 w-5" /> Send Us a Message
+                    Send Us a Message
                   </CardTitle>
                   <CardDescription>We usually reply within a few business hours.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Honeypot */}
-                  <div className="hidden">
-                    <Label htmlFor="botcheck">Bot Check</Label>
-                    <Input id="botcheck" name="botcheck" placeholder="Leave empty" aria-hidden="true" tabIndex={-1} />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Name */}
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name<span className="text-destructive"> *</span></Label>
-                      <Input 
-                        id="name" 
-                        name="name"
-                        placeholder="Enter your full name" 
-                        required
-                        disabled={isSubmitting} 
-                        className="w-full focus-visible:ring-2 focus-visible:ring-brand-dark-cyan/40 focus-visible:ring-offset-2"
-                        onChange={(e) => setFormValues(prev => ({ ...prev, name: e.target.value }))}
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email<span className="text-destructive"> *</span></Label>
-                      <Input 
-                        id="email" 
-                        name="email"
-                        type="email" 
-                        placeholder="you@example.com" 
-                        required
-                        disabled={isSubmitting} 
-                        className="w-full focus-visible:ring-2 focus-visible:ring-brand-dark-cyan/40 focus-visible:ring-offset-2" 
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number<span className="text-destructive"> *</span></Label>
-                      <PhoneInput 
-                        id="phone" 
-                        name="phone"
-                        disabled={isSubmitting} 
-                        required
-                        className="focus-visible:ring-2 focus-visible:ring-brand-dark-cyan/40 focus-visible:ring-offset-2"
-                        onChange={(value) => setFormValues(prev => ({ ...prev, phone: value }))}
-                      />
-                    </div>
-
-                    {/* Subject */}
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">Subject</Label>
-                      <select 
-                        id="subject"
-                        name="subject"
-                        defaultValue="General Inquiry"
-                        disabled={isSubmitting}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        onChange={(e) => setFormValues(prev => ({ ...prev, subject: e.target.value }))}
-                      >
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Quote Request">Quote Request</option>
-                        <option value="Support">Support</option>
-                        <option value="Feedback">Feedback</option>
-                      </select>
-                    </div>
-
-                    {/* Deadline */}
-                    <div className="space-y-2">
-                      <Label>Deadline (optional)</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button type="button" variant="outline" disabled={isSubmitting} className="w-full justify-start text-left font-normal">
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {selectedDate ? selectedDate.toLocaleDateString() : 'Pick a date'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
-                        </PopoverContent>
-                      </Popover>
-                      {selectedDate && <input type="hidden" name="deadline" value={selectedDate.toISOString()} />}
-                    </div>
-
-                    <div className="space-y-2 md:mt-6">
-                      <Label>Allow WhatsApp follow-up</Label>
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center space-x-2">
-                          <input type="radio" id="allowWhatsApp-yes" name="allowWhatsApp" value="yes" disabled={isSubmitting} />
-                          <Label htmlFor="allowWhatsApp-yes">Yes</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="radio" id="allowWhatsApp-no" name="allowWhatsApp" value="no" defaultChecked disabled={isSubmitting} />
-                          <Label htmlFor="allowWhatsApp-no">No</Label>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Message (spans 2 cols) */}
-                    <div className="md:col-span-2 space-y-2">
-                      <Label htmlFor="message">Message<span className="text-destructive"> *</span></Label>
-                      <Textarea 
-                        id="message" 
-                        name="message"
-                        rows={6} 
-                        placeholder="Please include a few details..." 
-                        required
-                        disabled={isSubmitting} 
-                        className="w-full focus-visible:ring-2 focus-visible:ring-brand-dark-cyan/40 focus-visible:ring-offset-2"
-                        onChange={(e) => setMessageLength(e.target.value.length)}
-                      />
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{messageLength}/1000</span>
-                      </div>
-                    </div>
-
-                    {/* Attachment */}
-                    <div className="md:col-span-2 space-y-2">
-                      <Label htmlFor="attachment">Attachment (optional)</Label>
-                      <div className="flex items-center gap-3">
-                        <input 
-                          id="attachment" 
-                          name="attachment"
-                          type="file" 
-                          multiple
-                          accept=".pdf,.png,.jpg,.jpeg,.svg,.tiff" 
-                          disabled={isSubmitting} 
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        />
-                        <Paperclip className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">Accepted: PDF, PNG, JPG, JPEG, SVG, TIFF (max 10MB each)</p>
-                    </div>
-                  </div>
+                  <GoogleFormEmbed
+                    title="Send Us a Message"
+                    src="https://docs.google.com/forms/d/e/1FAIpQLSeVdysxEcUkHBF8TOxGaaIddOJYw525fOz6-ax6XiZ8GUadTg/viewform"
+                    minHeight={1500}
+                    minHeightMobile={1900}
+                  />
                 </CardContent>
-                <CardFooter className="flex flex-col sm:flex-row gap-3">
-                  <Button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="flex-1 bg-brand-tangerine-500 text-brand-white hover:bg-brand-tangerine-400">
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex-1"
-                    onClick={() => {
-                      if (formRef.current) {
-                        formRef.current.reset();
-                        setSelectedDate(undefined);
-                        setMessageLength(0);
-                        setFormValues({ name: '', phone: '', subject: 'General Inquiry' });
-                      }
-                    }}
-                  >
-                    Clear form
-                  </Button>
-                </CardFooter>
               </Card>
-            </form>
+            </div>
 
             {/* RIGHT: Info & Map stack (sticky) */}
             <div className="lg:sticky lg:top-24 space-y-6">

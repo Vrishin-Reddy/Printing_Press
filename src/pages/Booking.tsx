@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Phone, Mail, ShieldCheck, Clock, CheckCircle2, MapPin } from 'lucide-react';
 import EmailLink from '@/components/EmailLink';
 import { getWhatsAppLink } from '@/utils/whatsapp';
+import GoogleFormEmbed from '@/components/GoogleFormEmbed';
 
 const Booking = () => {
 	return (
@@ -30,7 +31,12 @@ const Booking = () => {
 								<CardDescription>Provide your details and preferences below.</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<BookingForm />
+								<GoogleFormEmbed
+									title="Request a Quote / Place an Order"
+									src="https://docs.google.com/forms/d/e/1FAIpQLSeHexcMjMT76kOZZldUcOQWGgbF0j6tCZI1m8Ur8KI1pXSIeQ/viewform"
+									minHeight={1650}
+									minHeightMobile={2100}
+								/>
 							</CardContent>
 						</Card>
 
